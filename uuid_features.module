@@ -310,7 +310,9 @@ function uuid_features_settings($form, &$form_state) {
 
   foreach ($entity_info as $type => $info) {
     foreach ($info['bundles'] as $bundle => $bundle_info) {
-      $bundles[$type][$bundle] = $bundle_info['label'];
+      if (isset($bundle_info['label'])) {
+        $bundles[$type][$bundle] = $bundle_info['label'];
+      }
     }
     if (isset($info['uuid features']) && $info['uuid features'] === TRUE) {
       $form['entity']['uuid_features_entity_' . $type] = array(
