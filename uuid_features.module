@@ -63,6 +63,7 @@ function uuid_features_entity_info_alter(&$entity_info) {
     'fieldable_panels_pane',
     'commerce_product',
     'field_collection_item',
+    'paragraphs',
   );
   if (module_exists('file_entity')) {
     $entity_types[] = 'file';
@@ -209,6 +210,16 @@ function uuid_features_features_api() {
         'file' => drupal_get_path('module', 'uuid_features') . '/includes/uuid_commerce_product.features.inc',
       );
     }
+  }
+
+  if (module_exists('paragraphs')) {
+    $components['uuid_paragraphs'] = array(
+      'name' => t('Paragraphs'),
+      'feature_source' => TRUE,
+      'default_hook' => 'uuid_features_default_paragraphs',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
+      'file' => drupal_get_path('module', 'uuid_features') . '/includes/uuid_paragraphs.features.inc',
+    );
   }
 
   return $components;
