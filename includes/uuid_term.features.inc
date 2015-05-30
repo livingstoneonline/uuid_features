@@ -143,12 +143,19 @@ function uuid_term_features_export_render($module, $data) {
     unset($export->tid);
     // No need to export the rdf mapping.
     unset($export->rdf_mapping);
-    uuid_features_file_field_export($export, 'taxonomy_term');
+    $files = uuid_features_file_field_export($export, 'taxonomy_term');
 
     $entity_type = 'taxonomy_term';
     drupal_alter('uuid_entity_features_export_render', $entity_type, $export, $first_term, $module);
 
-    $code[] = '  $terms[] = ' . features_var_export($export, '  ') . ';';
+    $code[] = '  $terms[] = ' . features_var_export(get_object_vars($export), '  ') . ';';
+
+    // Add packaged files, if any.
+    if (!empty($files)) {
+      foreach ($files as $filename => $src_path) {
+        $return[$filename] = $src_path;
+      }
+    }
   }
 
   if (!empty($translatables)) {
@@ -156,7 +163,10 @@ function uuid_term_features_export_render($module, $data) {
   }
   $code[] = '  return $terms;';
   $code = implode("\n", $code);
-  return array('uuid_features_default_terms' => $code);
+
+  $return['uuid_features_default_terms'] = $code;
+
+  return $return;
 }
 
 /**
@@ -206,7 +216,7 @@ function uuid_term_features_rebuild($module) {
 
         drupal_alter('uuid_entity_features_rebuild', $entity_type, $term, $data, $module);
 
-        uuid_features_file_field_import($term, 'taxonomy_term');
+        uuid_features_file_field_import($term, 'taxonomy_term', $module);
         entity_uuid_save('taxonomy_term', $term);
       }
     }
