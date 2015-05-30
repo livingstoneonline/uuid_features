@@ -576,7 +576,7 @@ function uuid_features_file_export($file, $export_mode) {
   }
   elseif ($export_mode == 'packaged') {
     $assets_path = variable_get('uuid_features_packaged_file_assets_path', 'assets');
-    $export_data = $assets_path . '/' . $file->filename;
+    $export_data = $assets_path . '/' . drupal_basename($file->uri);
   }
   // Default is 'inline' export mode.
   else {
@@ -643,12 +643,19 @@ function uuid_features_file_field_import(&$import, $entity_type, $module = NULL)
 function _uuid_features_file_field_import_file(&$file, $module = NULL) {
   // This is here for historical reasons to support older exports.  It can be
   // removed in the next major version.
-  $file->uri = strtr($file->uri, array('#FILES_DIRECTORY_PATH#' => 'public:/'));
+  if (isset($file->uri)) {
+    $file->uri = strtr($file->uri, array('#FILES_DIRECTORY_PATH#' => 'public:/'));
+  }
 
+  // The file is referenced but not defined because it's already
+  // contained in a file_entity include.
+  if (!isset($file->uri) && module_exists('file_entity')) {
+    return FALSE;
+  }
   // The file is already in the right location AND either the
   // uuid_features_file_path is not set or the uuid_features_file_path and
   // filepath contain the same file.
-  if (is_file($file->uri) &&
+  elseif (isset($file->uri) && isset($file->uri) && is_file($file->uri) &&
     (
       (!isset($file->uuid_features_file_path) || !is_file($file->uuid_features_file_path)) ||
       (
