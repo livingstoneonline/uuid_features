@@ -9,25 +9,28 @@
  */
 function uuid_term_features_export_options() {
   $options = array();
-  // Could just leave this empty.
-  $vocabs = variable_get('uuid_features_entity_taxonomy_term', array_fill_keys(array_keys(taxonomy_vocabulary_get_names()), 0));
-  // Only include vocabs that user has selected (ie. set a non zero value).
-  $vocabs = array_filter($vocabs);
-  if (empty($vocabs)) {
-    return $options;
+
+  // Check what vocabularies are enabled for uuid features export.
+  $vocabs = array();
+  $entity_info = entity_get_info('taxonomy_term');
+  foreach ($entity_info['bundles'] as $key => $value) {
+    if (variable_get("uuid_features_entity_taxonomy_term_${key}", FALSE)) {
+      $vocabs[$key] = $key;
+    }
   }
+  if (!empty($vocabs)) {
+    $query = db_select('taxonomy_term_data', 't');
+    $query->innerJoin('taxonomy_vocabulary', 'v', 't.vid = v.vid');
+    $query->condition('v.machine_name', array_keys($vocabs))
+      ->fields('t', array('tid', 'name', 'uuid'))
+      ->addField('v', 'name', 'vname');
+    $query->orderBy('v.name', 'ASC');
+    $query->orderBy('t.name', 'ASC');
+    $results = $query->execute()->fetchAll();
 
-  $query = db_select('taxonomy_term_data', 't');
-  $query->innerJoin('taxonomy_vocabulary', 'v', 't.vid = v.vid');
-  $query->condition('v.machine_name', array_keys($vocabs))
-    ->fields('t', array('tid', 'name', 'uuid'))
-    ->addField('v', 'name', 'vname');
-  $query->orderBy('v.name', 'ASC');
-  $query->orderBy('t.name', 'ASC');
-  $results = $query->execute()->fetchAll();
-
-  foreach ($results as $term) {
-    $options[$term->uuid] = $term->vname . ' - ' . $term->name;
+    foreach ($results as $term) {
+      $options[$term->uuid] = $term->vname . ' - ' . $term->name;
+    }
   }
 
   drupal_alter('uuid_term_features_export_options', $options);
