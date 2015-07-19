@@ -911,21 +911,23 @@ function uuid_features_fetch_uuid_references(&$fields, $entity_type, $map) {
             // missing. It's likely that the uuid was stored in the first map
             // key. This is for backward compatibility.
             $target_key = reset($map);
-            if (isset($field_value[$target_key])) {
+            if (isset($field_value[$target_key]) && uuid_is_valid($field_value[$target_key])) {
               $uuid = $field_value[$target_key];
             }
           }
 
-          $entities = entity_uuid_load($entity_type, array($uuid), array(), TRUE);
-          $referenced_entity = reset($entities);
+          if ($uuid != 'not found') {
+            $entities = entity_uuid_load($entity_type, array($uuid), array(), TRUE);
+            $referenced_entity = reset($entities);
 
-          foreach ($map as $source => $destination) {
-            if ($referenced_entity) {
-              $field_value[$destination] = $referenced_entity->{$source};
-            }
-            else {
-              // Fallback.
-              $field_value[$destination] = UUID_FEATURES_DEFAULT_FALLBACK_ID;
+            foreach ($map as $source => $destination) {
+              if ($referenced_entity) {
+                $field_value[$destination] = $referenced_entity->{$source};
+              }
+              else {
+                // Fallback.
+                $field_value[$destination] = UUID_FEATURES_DEFAULT_FALLBACK_ID;
+              }
             }
           }
         }
