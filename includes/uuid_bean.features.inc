@@ -50,7 +50,7 @@ function uuid_bean_features_export($data, &$export, $module_name = '') {
   foreach ($bids as $uuid => $bid) {
     // Load the bean matching the $bid.
     $query = new EntityFieldQuery();
-    $bean = $query
+    $beans = $query
       // We just want one bean: the one matching
       // the current $bid.
       ->entityCondition('entity_type', 'bean')
@@ -59,14 +59,15 @@ function uuid_bean_features_export($data, &$export, $module_name = '') {
       ->execute();
 
     $export['features']['uuid_bean'][$uuid] = $uuid;
-    $pipe['bean'][$bean['bean'][$bid]->type] = $bean['bean'][$bid]->type;
+    $bean = $beans['bean'][$bid];
+    $pipe['bean'][$bean->type] = $bean->type;
 
     // Check for additional bean plugin module dependencies.
     foreach (module_implements('bean_types') as $module) {
       $result = call_user_func_array($module . '_bean_types', array());
       if (isset($result) && is_array($result)) {
         foreach ($result as $type => $values) {
-          if ($type == $bean['bean'][$bid]->type) {
+          if ($type == $bean->type) {
             $export['dependencies'][$module] = $module;
           }
         }
