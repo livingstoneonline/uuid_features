@@ -180,8 +180,10 @@ function uuid_bean_features_rebuild($module) {
 
         // Import file fields.
         uuid_features_file_field_import($bean, 'bean');
-        if (!$bean->save()) {
-          drupal_set_message('Failed to create ' . $data['type'] . ' bean ' . $data['label'], 'error');
+        // Old entity_uuid_save() returned NULL, now result of entity_save().
+        // This should work with both.
+        if (entity_uuid_save('bean', $bean) === FALSE) {
+          drupal_set_message(t('Failed to create %type bean %label', array('%type' => $data['type'], '%label' => $data['label'])), 'error');
         }
       }
     }
