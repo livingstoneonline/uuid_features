@@ -164,9 +164,16 @@ function uuid_bean_features_rebuild($module) {
       }
       else {
         // If this is an update, there will be a by-UUID matching bean.
-        $existing = entity_get_id_by_uuid('bean', array($data['uuid']));
-        if (!empty($existing)) {
-          $bean = entity_load_single('bean', $existing[$data['uuid']]);
+        // Also update if there's a bean with same delta.
+        $uuid_exists = entity_get_id_by_uuid('bean', array($data['uuid']));
+        if (!empty($uuid_exists)) {
+          $bean = entity_load_single('bean', $uuid_exists[$data['uuid']]);
+          foreach ($data as $key => $value) {
+            $bean->$key = $value;
+          }
+        }
+        elseif ($bean = bean_load_delta($data['delta'])) {
+          $delta_exists = TRUE;
           foreach ($data as $key => $value) {
             $bean->$key = $value;
           }
@@ -180,9 +187,19 @@ function uuid_bean_features_rebuild($module) {
 
         // Import file fields.
         uuid_features_file_field_import($bean, 'bean');
+
+        if (!empty($delta_exists)) {
+          // Overwrite old UUID. This is ugly and drops the very idea of UUID.
+          // But the idea of having UUID *and* delta as unique keys is flawed
+          // from the very beginning.
+          $success = entity_save('bean', $bean);
+        }
+        else {
+          $success = entity_uuid_save('bean', $bean);
+        }
         // Old entity_uuid_save() returned NULL, now result of entity_save().
         // This should work with both.
-        if (entity_uuid_save('bean', $bean) === FALSE) {
+        if ($success === FALSE) {
           drupal_set_message(t('Failed to create %type bean %label', array('%type' => $data['type'], '%label' => $data['label'])), 'error');
         }
       }
