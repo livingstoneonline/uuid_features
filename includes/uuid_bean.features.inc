@@ -166,6 +166,7 @@ function uuid_bean_features_rebuild($module) {
         // If this is an update, there will be a by-UUID matching bean.
         // Also update if there's a bean with same delta.
         $uuid_exists = entity_get_id_by_uuid('bean', array($data['uuid']));
+        $delta_exists = FALSE;
         if (!empty($uuid_exists)) {
           $bean = entity_load_single('bean', $uuid_exists[$data['uuid']]);
           foreach ($data as $key => $value) {
