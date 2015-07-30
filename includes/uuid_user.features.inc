@@ -75,7 +75,12 @@ function uuid_user_features_export_render($module, $data) {
 
     // Use date instead of created - same format used by node_object_prepare.
     $export->date = format_date($export->created, 'custom', 'Y-m-d H:i:s O');
-    unset($export->uid, $export->pass);
+    unset(
+      $export->uid,
+      $export->pass,
+      $export->access,
+      $export->login
+    );
 
     $entity_type = 'user';
     drupal_alter('uuid_entity_features_export_render', $entity_type, $export, $account, $module);
