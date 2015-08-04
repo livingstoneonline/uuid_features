@@ -23,6 +23,7 @@ function uuid_field_collection_features_export_options() {
     $efq_field_collection_items = new EntityFieldQuery();
     $efq_field_collection_items->entityCondition('entity_type', 'field_collection_item');
     $efq_field_collection_items->entityCondition('bundle', $enabled_bundles);
+    $efq_field_collection_items->addTag('uuid_field_collection_features_export_options');
     $result = $efq_field_collection_items->execute();
 
     if (!empty($result['field_collection_item'])) {

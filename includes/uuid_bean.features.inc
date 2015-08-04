@@ -23,7 +23,8 @@ function uuid_bean_features_export_options() {
     $query->fields('n', array('bid', 'delta', 'type', 'uuid'))
       ->condition('type', $types)
       ->orderBy('type')
-      ->orderBy('delta', 'ASC');
+      ->orderBy('delta', 'ASC')
+      ->addTag('uuid_bean_features_export_options');
     $beans = $query->execute()->fetchAll();
     foreach ($beans as $bean) {
       $options[$bean->uuid] = t('@type: @delta', array(
