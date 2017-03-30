@@ -59,14 +59,13 @@ function uuid_nodequeue_item_features_export_render($module, $data) {
         if ($nid) {
           // We need to check if record exists to perform overriden state check.
           $result = db_select('nodequeue_nodes', 'qn')
-            ->fields('qn', array('qid', 'sqid', 'nid'))
+            ->fields('qn', array('qid', 'sqid', 'nid', 'position'))
             ->condition('qn.nid', $nid)
             ->condition('qn.qid', $nodequeue->qid)
             ->range(0, 1)
-            ->execute()
-            ->rowCount();
+            ->execute();
 
-          if (!$result) {
+          if (!$result->rowCount()) {
             continue;
           }
         }
@@ -77,9 +76,11 @@ function uuid_nodequeue_item_features_export_render($module, $data) {
         $uuids = entity_get_uuid_by_id('node', array($nid));
         $uuid = reset($uuids);
         if ($uuid) {
+          $row = $result->fetchAssoc();
           $export = array(
             'queue_name' => $queue_name,
             'node_uuid' => $uuid,
+            'position' => $row['position'],
           );
           $code[] = '  $nodequeue_items[] = ' . features_var_export($export, '  ') . ';';
         }
@@ -109,15 +110,25 @@ function uuid_nodequeue_item_features_revert($module) {
 function uuid_nodequeue_item_features_rebuild($module) {
   $nodequeue_items = features_get_default('uuid_nodequeue_item', $module);
   if (!empty($nodequeue_items)) {
+    $sort = function ($a, $b) {
+      if ($a['queue_name'] == $b['queue_name']) {
+        return $a['position'] < $b['position'] ? -1 : 1;
+      }
+      return strcmp($a['queue_name'], $b['queue_name']);
+    };
+    usort($nodequeue_items, $sort);
     foreach ($nodequeue_items as $nodequeue_item) {
       $queue = nodequeue_load_queue_by_name($nodequeue_item['queue_name']);
-      $subqueue = reset(nodequeue_load_subqueues_by_queue($queue->qid));
-      $nid = reset(entity_get_id_by_uuid('node', array($nodequeue_item['node_uuid'])));
+      $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+      $subqueue = reset($subqueues);
+      $nids = entity_get_id_by_uuid('node', array($nodequeue_item['node_uuid']));
+      $nid = reset($nids);
       if ($nid && !empty($queue->qid) && !empty($subqueue->sqid)) {
         db_delete('nodequeue_nodes')
           ->condition('qid', $queue->qid)
-          ->condition('sqid', $queue->sqid)
-          ->condition('nid', $nid);
+          ->condition('sqid', $subqueue->sqid)
+          ->condition('nid', $nid)
+          ->execute();
         nodequeue_subqueue_add($queue, $subqueue, $nid);
       }
     }
