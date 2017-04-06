@@ -88,13 +88,12 @@ function uuid_node_features_export_render($module, $data) {
       continue;
     }
     // Attempt to load the node, using a fresh cache.
-    $node = node_load($nid, NULL, TRUE);
+    $nodes = entity_uuid_load('node', array($uuid), NULL, TRUE);
+    $node = reset($nodes);
     if (empty($node)) {
       continue;
     }
-    if (!empty($node->path)) {
-      $node->pathauto_perform_alias = FALSE;
-    }
+
     // Clone entity to avoid changes by reference.
     $export = clone $node;
 
